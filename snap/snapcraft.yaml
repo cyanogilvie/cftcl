@@ -1,0 +1,679 @@
+name: cftcl # you probably want to 'snapcraft register <name>'
+base: core18 # the base snap is the execution environment for this snap
+version: '8.7+1' # just for humans, typically '1.2+git' or '1.3.2'
+summary: Tcl with Batteries Included: from Codeforge, Ruby Lane and many other packages # 79 char long summary
+description: |
+  Tcl interpreter with a large selection of generally useful packages
+  for core language extensions, working with JSON, XML and HTML, talking to
+  databases, integrating with REST services like AWS, docker, working
+  with raster and svg images, building distributed applications, just-in-time
+  c compilation for new Tcl commands with tcc, and a REPL console.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: classic
+compression: lzo
+architectures:
+  - build-on: amd64
+  - build-on: armhf
+  - build-on: arm64
+
+parts:
+  tcl:
+    plugin: autotools
+    source-type: tar
+    source: https://core.tcl-lang.org/tcl/tarball/99b8ad35a258cade/tcl.tar.gz	# tip of core-8-branch
+    source-subdir: unix
+    build-packages:
+      - build-essential
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      cd unix
+      ./configure --prefix=/BOGUS --enable-64bit --enable-symbols
+      make -j 16 all
+      make install-binaries install-libraries install-tzdata install-packages install-headers install-private-headers DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cp "$SNAPCRAFT_PART_BUILD/libtommath/tommath.h" "$SNAPCRAFT_PART_INSTALL/BOGUS/include/"
+      ln -sf tclsh8.7 "$SNAPCRAFT_PART_INSTALL/BOGUS/bin/tclsh"
+      sed -i -e 's/::tmpath/::tm::path/' "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/tcl8.7/tclIndex"
+      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/tclConfig.sh"
+    organize:
+      BOGUS/lib: lib
+      BOGUS/bin: bin
+      BOGUS/include: include
+    stage: [-BOGUS]
+
+  tclconfig:
+    plugin: dump
+    source-type: tar
+    source: https://core.tcl-lang.org/tclconfig/tarball/8423a50147/tclconfig.tar.gz
+    organize:
+      install-sh: tclconfig/
+      tcl.m4: tclconfig/
+    stage: [tclconfig, -README.txt, -ChangeLog]
+    prime: [-tclconfig]
+
+  thread:
+    after: [tclconfig]
+    source-type: tar
+    source: https://core.tcl-lang.org/thread/tarball/2a83440579/thread.tar.gz
+    plugin: autotools
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+    stage: [-root]
+
+  tdbc:
+    after: [tclconfig]
+    source-type: tar
+    source: https://github.com/cyanogilvie/tdbc/archive/1f8b684.tar.gz
+    plugin: autotools
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+    stage: [-root]
+
+  pgwire:
+    plugin: nil
+    source-type: git
+    source: https://github.com/cyanogilvie/pgwire
+    source-tag: v3.0.0b10
+    source-depth: 1
+    override-build: |
+      make
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
+      cp -r src/tm/* "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
+
+  tcltls:
+    after: [tclconfig]
+    source-type: tar
+    source: https://core.tcl-lang.org/tcltls/tarball/tls-1-7-22/tcltls.tar.gz
+    plugin: autotools
+    build-packages:
+      - curl
+      - libssl-dev
+      - pkg-config
+    stage-packages:
+      - libssl1.1
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      ./autogen.sh
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --libdir=/lib --disable-sslv2 --disable-sslv3 --disable-tlsv1.0 --disable-tlsv1.1 --enable-ssl-fastpath
+      make -j 8 all
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+    stage: [-usr/share]
+
+  parseargs:
+    after: [tcl]
+    plugin: nil
+    source-type: git
+    source: https://github.com/RubyLane/parse_args
+    source-tag: v0.3.2
+    source-depth: 1
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+    stage: [lib/*]
+
+  rljson:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/RubyLane/rl_json/archive/c5a8033.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+      root/stage/include/*: include/
+    stage: [lib/*, include/*]
+
+  hash:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/hash/archive/79c2066.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+      root/stage/include/*: include/
+    stage: [lib/*, include/*]
+
+  unixsockets:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/unix_sockets/archive/761daa5.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+      root/stage/include/*: include/
+    stage: [lib/*, include/*]
+
+  tcllib:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://core.tcl-lang.org/tcllib/uv/tcllib-1.20.tar.gz
+    override-build: |
+      ./configure
+      make install-libraries install-applications DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      usr/local/lib/*: lib/
+      usr/local/bin/*: bin/
+    stage: [lib/*, bin/*]
+
+  gcclass:
+    source-type: tar
+    source: https://github.com/RubyLane/gc_class/archive/f295f65.tar.gz
+    plugin: dump
+    organize:
+      gc_class*.tm: lib/tcl8/site-tcl/
+    stage: [lib/*]
+
+  rlhttp:
+    source-type: tar
+    source: https://github.com/RubyLane/rl_http/archive/1.9.tar.gz
+    plugin: dump
+    organize:
+      rl_http-*.tm: lib/tcl8/site-tcl/
+    stage: [lib/*]
+
+  sqlite:
+    after: [tcl]
+    source-type: tar
+    source: https://sqlite.org/2021/sqlite-autoconf-3350400.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    plugin: nil
+    override-build: |
+      cd tea
+      autoconf
+      ./configure --with-tcl=$SNAPCRAFT_STAGE/lib
+      make all install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib/*: lib/
+    stage: [lib/*]
+
+  tcc4tcl:
+    after: [tcl]
+    source-type: tar
+    source: https://github.com/cyanogilvie/tcc4tcl/archive/b8171e0.tar.gz
+    plugin: nil
+    build-packages:
+      - openssl
+      - wget
+    stage-packages:
+      - libc6-dev
+    override-build: |
+      build/pre.sh
+      sed --in-place -e 's/@@VERS@@/0.30.1/g' configure.ac Makefile.in tcc4tcl.tcl
+      autoconf
+      ./configure --prefix=$SNAPCRAFT_PART_INSTALL --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install
+    stage: 
+      - -usr/share/man
+      - -usr/share/doc
+      - -usr/share/lintian
+      - -usr/bin
+      - -include/expat*
+      - -usr/lib/**/*.a
+
+  tbuild:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tbuild/archive/e526a9c.tar.gz
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      cp tbuild-lite.tcl $SNAPCRAFT_PART_INSTALL/bin/tbuild-lite
+      #echo "#!/bin/sh\nset\nexec \"\$(dirname \"\$(readlink -f \"\$0\")\")/tbuild-lite.real\" \"\$@\"" > "$SNAPCRAFT_PART_INSTALL/bin/tbuild-lite"
+      chmod +x $SNAPCRAFT_PART_INSTALL/bin/tbuild-lite
+
+  cflib:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/cflib/archive/1.14.2.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  sop:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/sop/archive/1.7.2.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  netdgram:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/netdgram/archive/v0.9.12.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  evlog:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/evlog/archive/c6c2529.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  dsl:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/dsl/archive/f24a59e.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  logging:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/logging/archive/e709389.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  sockopt:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/sockopt/archive/c574d92.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [lib/*]
+
+  crypto:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/crypto/archive/7a04540.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  datasource:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/datasource/archive/v0.2.3.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  m2:
+    after: [tbuild]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/m2/archive/v0.43.15.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      tbuild-lite build_tm m2
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r tm/tcl/* $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/bin
+      mkdir -p $SNAPCRAFT_PART_INSTALL/opt/m2
+      cp -r m2_node $SNAPCRAFT_PART_INSTALL/opt/m2/
+      cp -r tools $SNAPCRAFT_PART_INSTALL/opt/m2/
+      cp -r authenticator $SNAPCRAFT_PART_INSTALL/opt/m2/
+      cp -r admin_console $SNAPCRAFT_PART_INSTALL/opt/m2/
+      mkdir -p $SNAPCRAFT_PART_INSTALL/etc/codeforge/authenticator
+      cp -r plugins $SNAPCRAFT_PART_INSTALL/etc/codeforge/authenticator/
+
+  tclreadline:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tclreadline/archive/v2.3.8.1.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    build-packages:
+      - libreadline-dev
+    stage-packages:
+      - libreadline7
+    override-build: |
+      autoconf
+      ./configure --prefix= --without-tk --with-tcl=$SNAPCRAFT_STAGE/lib --with-tcl-includes=$SNAPCRAFT_STAGE/include --enable-symbols
+      make install-libLTLIBRARIES install-tclrlSCRIPTS DESTDIR=$SNAPCRAFT_PART_INSTALL
+      mv $SNAPCRAFT_PART_INSTALL/lib/libtclreadline-*.so $SNAPCRAFT_PART_INSTALL/lib/tclreadline2.3.8.1/libtclreadline.so
+    stage: [lib/*]
+
+  expect:
+    after: [tcl]
+    source-type: tar
+    source: https://core.tcl-lang.org/expect/tarball/f8e8464f14/expect.tar.gz
+    plugin: nil
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [lib/*]
+
+  tclsignal:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tclsignal/archive/v1.4.4.1.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [lib/*]
+
+  type:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/type/archive/v0.2.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [lib/*]
+
+  inotify:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/inotify/archive/298f608.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [lib/*]
+
+  pixel:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/pixel/archive/2c70755.tar.gz
+    build-packages:
+      - libjpeg-turbo8-dev
+      - libexif-dev
+      - libpng-dev
+      - libwebp-dev
+      - libimlib2-dev
+    stage-packages:
+      - libjpeg-turbo8
+      - libexif12
+      - libpng16-16
+      - libwebp6
+      - libimlib2
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3 -I$SNAPCRAFT_PART_INSTALL/include"
+    override-build: |
+      cd pixel_core
+        echo "Building pixel_core"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+        make -j 8 all
+        sed -inline -e "s/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/$(echo "$SNAPCRAFT_PART_INSTALL/root/stage" | sed -e 's/\//\\\//g')/" pixelConfig.sh
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+        cp pixelConfig.sh $SNAPCRAFT_PART_INSTALL/lib/
+      cd ../pixel_jpeg
+        echo "Building pixel_jpeg"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cd ../pixel_png
+        echo "Building pixel_png"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+        #     cd ../pixel_svg_cairo
+        #       echo "Building pixel_svg_cairo"
+        #       autoconf
+        #       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cd ../pixel_webp
+        echo "Building pixel_webp"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cd ../pixel_imlib2
+        echo "Building pixel_imlib2"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage:
+      - -usr/share/man
+      - -usr/share/doc
+      - -usr/share/lintian
+      - -usr/bin
+      - -root
+
+  chantricks:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/chantricks/archive/v1.0.3.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+  openapi:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tcl-openapi/archive/v0.4.11.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl
+      cp -r *.tm $SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/
+
+  docker:
+    after: [openapi, rljson, parseargs, chantricks, tcllib]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tcl-docker-client/archive/v0.9.0.tar.gz
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+  tdom:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/RubyLane/tdom/archive/cyan-0.9.3.1.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    build-packages:
+      - libgumbo-dev
+    stage-packages:
+      - libgumbo1
+    override-build: |
+      autoconf
+      ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --enable-html5
+      make -j 8 all
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  tty:
+    after: [tcl]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/tcl-tty/archive/v0.4.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+  parsetcl:
+    after: [tcl, tdom]
+    plugin: nil
+    source-type: tar
+    source: https://github.com/cyanogilvie/parsetcl/archive/030a1439b76747ec7a016c5bd0ae78c93fc9bb7b.tar.gz
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      autoconf
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --with-tdom=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  botocore:
+    plugin: dump
+    source-type: tar
+    source: https://github.com/boto/botocore/archive/refs/tags/1.20.57.tar.gz
+    stage: [botocore/data/*]
+    prime: [-botocore]
+
+  aws:
+    after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread]
+    plugin: nil
+    source-type: local
+    source: api
+    build-environment:
+      - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      mkdir -p "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl"
+      cp -r *.tm aws1 "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
+      "$SNAPCRAFT_STAGE/bin/tclsh8.7" build.tcl -definitions "$SNAPCRAFT_STAGE/botocore/data" -prefix "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl"
+
+  trofs:
+    after: [tcl]
+    plugin: nil
+    source: https://github.com/cyanogilvie/trofs/archive/v0.4.4.1.tar.gz
+    source-type: tar
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      autoconf
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  flock:
+    plugin: make
+    source-type: tar
+    source: https://github.com/cyanogilvie/flock/archive/v0.2.tar.gz
+
+apps:
+  cftcl:
+    command: bin/tclsh8.7
+  tbuild-lite:
+    command: bin/tclsh8.7 $SNAP/bin/tbuild-lite
+  m2-node:
+    command: bin/tclsh8.7 $SNAP/opt/m2/m2_node/m2_node.tcl
+  m2-keys:
+    command: bin/tclsh8.7 $SNAP/opt/m2/tools/keys.tcl
+  authenticator:
+    command: bin/tclsh8.7 $SNAP/opt/m2/authenticator/authenticator
+  m2-admin-console:
+    command: bin/tclsh8.7 $SNAP/opt/m2/admin_console/m2_admin_console.tcl
+
+# vim: expandtab ts=8 shiftwidth=2
