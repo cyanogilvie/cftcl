@@ -1,7 +1,7 @@
-name: cftcl # you probably want to 'snapcraft register <name>'
-base: core18 # the base snap is the execution environment for this snap
-version: '8.7+1' # just for humans, typically '1.2+git' or '1.3.2'
-summary: Tcl with Batteries Included: from Codeforge, Ruby Lane and many other packages # 79 char long summary
+name: cftcl
+base: core18
+version: '8.7+3'
+summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
   for core language extensions, working with JSON, XML and HTML, talking to
@@ -240,12 +240,15 @@ parts:
     stage-packages:
       - libc6-dev
     override-build: |
-      build/pre.sh
-      sed --in-place -e 's/@@VERS@@/0.30.1/g' configure.ac Makefile.in tcc4tcl.tcl
-      autoconf
-      ./configure --prefix=$SNAPCRAFT_PART_INSTALL --with-tcl=$SNAPCRAFT_STAGE/lib
-      make -j 8 all
-      make install
+      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" -o "$SNAPCRAFT_TARGET_ARCH" = "armhf" ]
+      then
+        build/pre.sh
+        sed --in-place -e 's/@@VERS@@/0.30.1/g' configure.ac Makefile.in tcc4tcl.tcl
+        autoconf
+        ./configure --prefix=$SNAPCRAFT_PART_INSTALL --with-tcl=$SNAPCRAFT_STAGE/lib
+        make -j 8 all
+        make install
+      fi
     stage: 
       - -usr/share/man
       - -usr/share/doc
@@ -423,9 +426,12 @@ parts:
     build-environment:
       - CFLAGS: "$CFLAGS -march=native -O3"
     override-build: |
-      ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
-      make -j 8 all
-      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" -o "$SNAPCRAFT_TARGET_ARCH" = "armhf" ]
+      then
+        ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      fi
     organize:
       root/stage/lib: lib
     stage: [lib/*]
