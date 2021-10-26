@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+4'
+version: '8.7+6'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -20,7 +20,7 @@ parts:
   tcl:
     plugin: autotools
     source-type: tar
-    source: https://core.tcl-lang.org/tcl/tarball/99b8ad35a258cade/tcl.tar.gz	# tip of core-8-branch
+    source: https://core.tcl-lang.org/tcl/tarball/99b8ad35a258cade/tcl.tar.gz # tip of core-8-branch
     source-subdir: unix
     build-packages:
       - build-essential
@@ -272,7 +272,7 @@ parts:
     after: [tbuild]
     plugin: nil
     source-type: tar
-    source: https://github.com/cyanogilvie/cflib/archive/1.14.2.tar.gz
+    source: https://github.com/cyanogilvie/cflib/archive/1.15.1.tar.gz
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
@@ -372,7 +372,7 @@ parts:
     after: [tbuild]
     plugin: nil
     source-type: tar
-    source: https://github.com/cyanogilvie/datasource/archive/v0.2.3.tar.gz
+    source: https://github.com/cyanogilvie/datasource/archive/v0.2.4.tar.gz
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
@@ -666,7 +666,7 @@ parts:
   flock:
     plugin: make
     source-type: tar
-    source: https://github.com/cyanogilvie/flock/archive/v0.2.tar.gz
+    source: https://github.com/cyanogilvie/flock/archive/v0.3.tar.gz
 
 apps:
   cftcl:
