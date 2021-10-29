@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+6'
+version: '8.7+9'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -666,7 +666,29 @@ parts:
   flock:
     plugin: make
     source-type: tar
-    source: https://github.com/cyanogilvie/flock/archive/v0.3.tar.gz
+    source: https://github.com/cyanogilvie/flock/archive/v0.6.tar.gz
+
+  ck:
+    after: [tcl]
+    plugin: nil
+    source: https://github.com/cyanogilvie/ck/archive/v8.6.tar.gz
+    source-type: tar
+    build-packages:
+      - libncursesw5-dev
+    stage-packages:
+      - libncursesw5
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      autoconf
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make -j 8 install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      mkdir -p $SNAPCRAFT_PART_INSTALL/lib/ck8.6
+      cp -a library $SNAPCRAFT_PART_INSTALL/lib/ck8.6/
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
 
 apps:
   cftcl:
