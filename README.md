@@ -76,4 +76,5 @@ but they'll be as fast as they can for that hardware.  Change that to just "-O2"
 | datasource | 0.2.3 |
 | flock | 0.2 |
 | ck | 8.6 |
+| resolve | 0.2 |
 

@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+9'
+version: '8.7+10'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -44,7 +44,7 @@ parts:
   tclconfig:
     plugin: dump
     source-type: tar
-    source: https://core.tcl-lang.org/tclconfig/tarball/8423a50147/tclconfig.tar.gz
+    source: https://core.tcl-lang.org/tclconfig/tarball/1f17dfd726292dc4/tclconfig.tar.gz
     organize:
       install-sh: tclconfig/
       tcl.m4: tclconfig/
@@ -675,8 +675,10 @@ parts:
     source-type: tar
     build-packages:
       - libncursesw5-dev
+      - libncurses5-dev
     stage-packages:
       - libncursesw5
+      - libncurses5
     build-environment:
       - CFLAGS: "$CFLAGS -march=native -O3"
     override-build: |
@@ -686,6 +688,22 @@ parts:
       make -j 8 install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       mkdir -p $SNAPCRAFT_PART_INSTALL/lib/ck8.6
       cp -a library $SNAPCRAFT_PART_INSTALL/lib/ck8.6/
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  resolve:
+    after: [tcl]
+    plugin: nil
+    source: https://github.com/cyanogilvie/resolve/archive/v0.3.tar.gz
+    source-type: tar
+    build-environment:
+      - CFLAGS: "$CFLAGS -march=native -O3"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      autoconf
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make -j 8 install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
     organize:
       root/stage/lib: lib
     stage: [-root]
