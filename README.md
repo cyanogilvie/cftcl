@@ -4,7 +4,7 @@ Get lots of packages for little effort and size!
 
 ~~~
 snapcraft build
-sudo snapcraft install ./cftcl-8.7+2_amd64.snap --dangerous --classic
+sudo snapcraft install ./cftcl-8.7+11_amd64.snap --dangerous --classic
 ~~~
 
 --dangerous is needed because the package you just built isn't signed, and --classic is needed because it's an interpreter that can do anything the language allows.
@@ -41,7 +41,7 @@ but they'll be as fast as they can for that hardware.  Change that to just "-O2"
 | rl_http | 1.9 |
 | sqlite3 | 3.35.4 |
 | tcc4tcl | 0.30.1 |
-| cflib | 1.14.2 |
+| cflib | 1.15.2 |
 | sop | 1.7.2 |
 | netdgram | 0.9.12 |
 | evlog | 0.3.1 |
@@ -73,8 +73,8 @@ but they'll be as fast as they can for that hardware.  Change that to just "-O2"
 | aws | 2.0a2 |
 | parsetcl | 0.1 |
 | tty | 0.4 |
-| datasource | 0.2.3 |
-| flock | 0.2 |
+| datasource | 0.2.4 |
+| flock | 0.6 |
 | ck | 8.6 |
-| resolve | 0.2 |
+| resolve | 0.3 |
 
