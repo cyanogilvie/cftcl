@@ -32,7 +32,7 @@ but they'll be as fast as they can for that hardware.  Change that to just "-O2"
 | pgwire | 3.0.0b10 |
 | tdom | 0.9.3 |
 | tls | 1.7.22 |
-| parse_args | 0.3.2 |
+| parse_args | 0.3.3 |
 | rl_json | 0.11.0 |
 | hash | 0.3 |
 | unix_sockets | 0.2 |
