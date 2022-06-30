@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+14'
+version: '8.7+15'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -60,7 +60,7 @@ parts:
     source: https://core.tcl-lang.org/thread/tarball/2a83440579/thread.tar.gz
     plugin: autotools
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -76,7 +76,7 @@ parts:
     source: https://github.com/cyanogilvie/tdbc/archive/1f8b684.tar.gz
     plugin: autotools
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -109,7 +109,7 @@ parts:
     stage-packages:
       - libssl1.1
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       ./autogen.sh
@@ -126,7 +126,7 @@ parts:
     source-tag: v0.3.3
     source-depth: 1
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -139,10 +139,13 @@ parts:
   rljson:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://github.com/RubyLane/rl_json/archive/c5a8033.tar.gz
+    #source-type: tar
+    #source: https://github.com/RubyLane/rl_json/archive/c5a8033.tar.gz
+    source-type: git
+    source: https://github.com/RubyLane/rl_json
+    source-tag: 0.11.1
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -159,7 +162,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/hash/archive/79c2066.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -176,7 +179,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/unix_sockets/archive/761daa5.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -209,8 +212,9 @@ parts:
     stage: [lib/*]
 
   rlhttp:
-    source-type: tar
-    source: https://github.com/RubyLane/rl_http/archive/1.9.tar.gz
+    source-type: git
+    source: https://github.com/RubyLane/rl_http
+    source-tag: "1.11"
     plugin: dump
     organize:
       rl_http-*.tm: lib/tcl8/site-tcl/
@@ -221,7 +225,7 @@ parts:
     source-type: tar
     source: https://sqlite.org/2021/sqlite-autoconf-3350400.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     plugin: nil
     override-build: |
       cd tea
@@ -349,7 +353,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/sockopt/archive/c574d92.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -409,7 +413,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/tclreadline/archive/v2.3.8.1.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     build-packages:
       - libreadline-dev
     stage-packages:
@@ -427,7 +431,7 @@ parts:
     source: https://core.tcl-lang.org/expect/tarball/f8e8464f14/expect.tar.gz
     plugin: nil
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" -o "$SNAPCRAFT_TARGET_ARCH" = "armhf" ]
       then
@@ -445,7 +449,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/tclsignal/archive/v1.4.4.1.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -461,7 +465,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/type/archive/v0.2.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -477,7 +481,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/inotify/archive/298f608.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
@@ -505,7 +509,7 @@ parts:
       - libwebp6
       - libimlib2
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3 -I$SNAPCRAFT_PART_INSTALL/include"
+      - CFLAGS: "$CFLAGS -flto -O3 -I$SNAPCRAFT_PART_INSTALL/include"
     override-build: |
       cd pixel_core
         echo "Building pixel_core"
@@ -591,7 +595,7 @@ parts:
     source-type: tar
     source: https://github.com/RubyLane/tdom/archive/cyan-0.9.3.1.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     build-packages:
       - libgumbo-dev
     stage-packages:
@@ -611,7 +615,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/tcl-tty/archive/v0.4.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
 
@@ -621,7 +625,7 @@ parts:
     source-type: tar
     source: https://github.com/cyanogilvie/parsetcl/archive/030a1439b76747ec7a016c5bd0ae78c93fc9bb7b.tar.gz
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -657,7 +661,7 @@ parts:
     source: https://github.com/cyanogilvie/trofs/archive/v0.4.4.1.tar.gz
     source-type: tar
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       autoconf
       ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
@@ -683,7 +687,7 @@ parts:
       - libncursesw5
       - libncurses5
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -701,7 +705,7 @@ parts:
     source: https://github.com/cyanogilvie/resolve/archive/v0.4.tar.gz
     source-type: tar
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -O3"
+      - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -717,7 +721,7 @@ parts:
     source: https://github.com/cyanogilvie/dedup/archive/v0.9.1.tar.gz
     source-type: tar
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -Ofast -flto -ffast-math -std=gnu11"
+      - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
       ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
@@ -743,7 +747,7 @@ parts:
     plugin: dump
     source-type: git
     source: https://github.com/arithy/packcc
-    source-branch: feature/#55-lines
+    source-tag: v1.7.2
     organize:
       .git: repos/packcc.git/
     stage: [repos/packcc.git]
@@ -757,7 +761,7 @@ parts:
     source-tag: v0.2.1
     source-depth: 1
     build-environment:
-      - CFLAGS: "$CFLAGS --flto -Ofast -flto -ffast-math -std=gnu11"
+      - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
       git submodule update --init --recommend-shallow --depth=1 --reference $NSPCRAFT_STAGE/repos/re2c.git tools/re2c
       git submodule update --init --recommend-shallow --depth=1 --reference $NSPCRAFT_STAGE/repos/packcc.git tools/packcc
