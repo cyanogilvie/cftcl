@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+17'
+version: '8.7+18'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -769,6 +769,29 @@ parts:
       autoconf
       ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --with-dedup=$SNAPCRAFT_STAGE/lib/dedup0.9.1 --enable-symbols
       make pgo install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  brotli:
+    after: [tcl, tclconfig]
+    plugin: nil
+    source-type: git
+    source: https://github.com/cyanogilvie/tcl-brotli
+    source-tag: v0.1
+    source-depth: 1
+    build-packages:
+      - pkg-config
+      - libbrotli-dev
+    stage-packages:
+      - libbrotli1
+    build-environment:
+      - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
+    override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
+      autoconf
+      ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
     organize:
       root/stage/lib: lib
     stage: [-root]
