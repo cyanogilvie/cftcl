@@ -23,8 +23,13 @@ namespace eval aws {
 	} {
 		package require inifile
 		set ini	[::ini::open [file join $::env(HOME) .aws/config]]
+		if {[info exists ::env(AWS_PROFILE)]} {
+			set section	"profile $::env(AWS_PROFILE)"
+		} else {
+			set section	default
+		}
 		try {
-			::ini::value $ini default region
+			::ini::value $ini $section region
 		} finally {
 			::ini::close $ini
 			unset -nocomplain ini
@@ -324,7 +329,8 @@ namespace eval aws {
 			# Produce urlv: a list of fully decoded path elements, and canonized_path: a fully-encoded and normalized path <<<
 			set urlv	{}
 			if {[string trim $path /] eq ""} {
-				set canonical_uri	/
+				set canonical_uri		/
+				set canonical_uri_sig	/
 			} else {
 				set urlv	[lmap e [split [string trimleft $path /] /] {urlencode rfc_urldecode -- $e}]
 				if {$sig_service eq "s3"} {
@@ -342,17 +348,21 @@ namespace eval aws {
 					}
 					if {$skipped} {lappend n_urlv ""}		;# Compensate for the switch on {. ""} stripping all the slashes off the end of the uri
 				}
-				set canonical_uri	/[join [lmap e $n_urlv {
+				set canonical_uri_sig	/[join [lmap e $n_urlv {
 					if {$sig_service eq "s3"} {
 						apply $aws_encode $e
 					} else {
 						# Services other than S3 have to have the path elements encoded twice according to the documentation, but not the test vectors...
-						#apply $aws_encode [apply $aws_encode $e]
-						apply $aws_encode $e
+						apply $aws_encode [apply $aws_encode $e]
+						#apply $aws_encode $e
 					}
 				}] /]
+				set canonical_uri	/[join [lmap e $n_urlv {
+					apply $aws_encode $e
+				}] /]
 				if {$sig_service eq "s3" && [string index $path end] eq "/" && [string index $canonical_uri end] ne "/"} {
-					append canonical_uri	/
+					append canonical_uri		/
+					append canonical_uri_sig	/
 				}
 			}
 			#>>>
@@ -442,7 +452,7 @@ namespace eval aws {
 
 			set hashed_payload	[hash $algorithm $body]
 
-			set canonical_request	"[string toupper $method]\n$canonical_uri\n$canonical_query_string\n$canonical_headers\n$signed_headers\n$hashed_payload"
+			set canonical_request	"[string toupper $method]\n$canonical_uri_sig\n$canonical_query_string\n$canonical_headers\n$signed_headers\n$hashed_payload"
 			#log debug "canonical request" {{"creq": "~S:canonical_request"}}
 			#puts stderr "canonical request:\n$canonical_request"
 			set hashed_canonical_request	[hash $algorithm $canonical_request]
@@ -496,6 +506,21 @@ namespace eval aws {
 						[dict get [$h headers] x-amzn-requestid] \
 						"" \
 					] $message
+				} elseif {[json exists [$h body] message]} {
+					set headers	[$h headers]
+					throw [list AWS \
+						[if {[dict exists $headers x-amzn-errortype]} {dict get $headers x-amzn-errortype} else {return -level 0 "<unknown>"}] \
+						[dict get [$h headers] x-amzn-requestid] \
+						"" \
+					] [json get [$h body] message]
+				} else {
+					set headers	[$h headers]
+					log error "Unhandled AWS error: [$h body]"
+					throw [list AWS \
+						[if {[dict exists $headers x-amzn-errortype]} {dict get $headers x-amzn-errortype} else {return -level 0 "<unknown>"}] \
+						[dict get [$h headers] x-amzn-requestid] \
+						"" \
+					] "Unhandled AWS error type"
 				}
 				#>>>
 			} else { # Guess XML <<<
@@ -788,9 +813,14 @@ namespace eval aws {
 			if {[file readable $credfile]} {
 				package require inifile
 				set ini	[::ini::open $credfile]
+				if {[info exists ::env(AWS_PROFILE)]} {
+					set section	$::env(AWS_PROFILE)
+				} else {
+					set section	default
+				}
 				try {
-					dict set creds access_key	[::ini::value $ini default aws_access_key_id]
-					dict set creds secret		[::ini::value $ini default aws_secret_access_key]
+					dict set creds access_key	[::ini::value $ini $section aws_access_key_id]
+					dict set creds secret		[::ini::value $ini $section aws_secret_access_key]
 					dict set creds token		""
 					dict set creds source		user
 					_debug {log debug "Found credentials: user"}
@@ -1224,6 +1254,10 @@ namespace eval aws {
 			}
 		} elseif {$template ne {}} {
 			set body	[encoding convertto utf-8 [uplevel 1 [list json template $template]]]
+			if {[json length $body] == 0} {
+				set body	""
+				set content_type	""
+			}
 		} else {
 			set body	{}
 		}
