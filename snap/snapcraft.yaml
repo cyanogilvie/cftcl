@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+22'
+version: '8.7+24'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -214,7 +214,7 @@ parts:
   rlhttp:
     source-type: git
     source: https://github.com/RubyLane/rl_http
-    source-tag: "1.11"
+    source-tag: "1.13"
     plugin: dump
     organize:
       rl_http-*.tm: lib/tcl8/site-tcl/
@@ -759,7 +759,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.2.1
+    source-tag: v0.2.5
     source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
