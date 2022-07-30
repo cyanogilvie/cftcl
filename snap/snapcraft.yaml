@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+30'
+version: '8.7+31'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -613,8 +613,9 @@ parts:
   tty:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/tcl-tty/archive/v0.4.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/tcl-tty
+    source-tag: v0.5
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
