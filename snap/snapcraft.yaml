@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+33'
+version: '8.7+34'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -157,11 +157,9 @@ parts:
   rljson:
     after: [tcl]
     plugin: nil
-    #source-type: tar
-    #source: https://github.com/RubyLane/rl_json/archive/c5a8033.tar.gz
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.11.1
+    source-tag: 0.11.2
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
