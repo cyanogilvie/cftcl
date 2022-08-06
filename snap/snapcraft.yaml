@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+34'
+version: '8.7+35'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -819,7 +819,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/aio
-    source-tag: v1.6
+    source-tag: v1.7
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
