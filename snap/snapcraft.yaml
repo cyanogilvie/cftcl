@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+35'
+version: '8.7+36'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -155,14 +155,15 @@ parts:
     stage: [lib/*]
 
   rljson:
-    after: [tcl]
+    after: [tcl, tclconfig]
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.11.2
+    source-tag: 0.11.3
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
+      ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
       make -j 8 all
