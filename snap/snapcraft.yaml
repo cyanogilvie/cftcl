@@ -1,6 +1,6 @@
 name: cftcl
 base: core18
-version: '8.7+36'
+version: '8.7+37'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -108,7 +108,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/pgwire
-    source-tag: v3.0.0b12
+    source-tag: v3.0.0b14
     source-depth: 1
     override-build: |
       make
@@ -847,6 +847,17 @@ parts:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
       make test && make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+  rltest:
+    after: [tcl]
+    plugin: nil
+    source-type: git
+    source: https://github.com/RubyLane/rltest
+    source-tag: v1.5
+    build-environment:
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
 
 apps:
   cftcl:
