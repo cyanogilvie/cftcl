@@ -4,12 +4,11 @@
 # - Implement paginators
 # - Clean up this horrible mess
 
-if {[file exists /here/api]} {
-	tcl::tm::path add /here/api
-}
-if {[info exists env(SNAPCRAFT_PART_INSTALL)]} {
-	tcl::tm::path add [file join $env(SNAPCRAFT_PART_INSTALL)/lib/tcl8/site-tcl]
-}
+#if {[file exists /here/api]} {
+#	tcl::tm::path add /here/api
+#}
+set here	[file dirname [file normalize [info script]]]
+tcl::tm::path add $here
 set aws_ver	[package require aws 2]
 
 package require rl_json
@@ -526,7 +525,7 @@ proc build_aws_services args { #<<<
 
 	set by_protocol	{}
 	foreach service_dir [glob -type d -tails -directory $definitions *] {
-		set latest	[lindex [glob -type d -tails -directory [file join $definitions $service_dir] *] 0]
+		set latest	[lindex [lsort -decreasing -dictionary [glob -type d -tails -directory [file join $definitions $service_dir] *]] 0]
 		if {$latest eq ""} {
 			error "Couldn't resolve latest version of $service_dir"
 		}
@@ -803,10 +802,10 @@ proc build_aws_services args { #<<<
 		set aws_ver	[package require aws 2]
 		switch -exact -- $output_mode {
 			ziplet {
-				writebin [file join $prefix aws/[json get $service_def metadata service_name]-$aws_ver.tm] $ziplet
+				writebin [file join $prefix aws/[string map {- _} [json get $service_def metadata service_name]]-$aws_ver.tm] $ziplet
 			}
 			plain {
-				writefile [file join $prefix aws/[json get $service_def metadata service_name]-$aws_ver.tm] $service_code
+				writefile [file join $prefix aws/[string map {- _} [json get $service_def metadata service_name]-$aws_ver.tm]] $service_code
 			}
 			default {
 				error "Unknown output mode \"$output_mode\""
