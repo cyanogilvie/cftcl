@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+46'
+version: '8.7+48'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -25,7 +25,7 @@ parts:
     build-packages:
       - build-essential
     build-environment:
-      - CFLAGS: "$CFLAGS -O3 -flto"
+      - CFLAGS: "-O3 -flto"
     override-build: |
       cd unix
       ./configure --prefix=/BOGUS --enable-64bit --enable-symbols
@@ -108,7 +108,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/pgwire
-    source-tag: v3.0.0b18
+    source-tag: v3.0.0b19
     source-depth: 1
     override-build: |
       make
@@ -141,12 +141,11 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/parse_args
-    source-tag: v0.3.3
+    source-tag: v0.3.4.2
     source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
-      ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
       ./configure --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
@@ -155,15 +154,14 @@ parts:
     stage: [lib/*]
 
   rljson:
-    after: [tcl, tclconfig]
+    after: [tcl]
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.11.4
+    source-tag: 0.11.5.1
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
-      ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
       ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib
       make -j 8 all
@@ -233,7 +231,7 @@ parts:
   rlhttp:
     source-type: git
     source: https://github.com/RubyLane/rl_http
-    source-tag: "1.14.1"
+    source-tag: "1.14.2"
     plugin: nil
     override-build: |
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
@@ -676,7 +674,7 @@ parts:
     prime: [-botocore]
 
   aws:
-    after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread]
+    after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread, tcllib, tdom]
     plugin: nil
     source-type: local
     source: api
@@ -792,7 +790,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.2.9
+    source-tag: v0.2.9.1
     source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
@@ -812,7 +810,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/tcl-brotli
-    source-tag: v0.3
+    source-tag: v0.3.1
     source-depth: 1
     build-packages:
       - pkg-config
@@ -882,15 +880,16 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/jitc
-    source-tag: v0.2
+    source-tag: v0.2.1
     source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -O3 -flto -std=gnu11"
     build-packages:
       - python3
     override-build: |
-      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
-      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/packcc.git tools/packcc
+      #git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
+      #git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/packcc.git tools/packcc
+      sed --in-place -e 's/ --single-branch//g' Makefile.in
       autoconf
       ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       make tcc
