@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+49'
+version: '8.7+50'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -108,7 +108,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/pgwire
-    source-tag: v3.0.0b19
+    source-tag: v3.0.0b19.1
     source-depth: 1
     override-build: |
       make
@@ -174,8 +174,9 @@ parts:
   hash:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/hash/archive/79c2066.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/hash
+    source-tag: v0.3.2
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
