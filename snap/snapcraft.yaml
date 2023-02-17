@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+54'
+version: '8.7+55'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -522,8 +522,9 @@ parts:
   pixel:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/pixel/archive/2c70755.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/pixel
+    source-tag: imlib2_1.2.4
     build-packages:
       - libjpeg-turbo8-dev
       - libexif-dev
