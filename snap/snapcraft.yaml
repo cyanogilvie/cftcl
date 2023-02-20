@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+55'
+version: '8.7+56'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -519,12 +519,36 @@ parts:
       root/stage/lib: lib
     stage: [lib/*]
 
+  phash:
+    plugin: nil
+    source-type: tar
+    source: https://github.com/aetilius/pHash/archive/dea9ffc.tar.gz
+    build-packages:
+      - libboost-dev
+      - libjpeg-turbo8
+      - libpng-dev
+      - libtiff-dev
+      - cmake
+    build-environment:
+      - CFLAGS: "$CFLAGS -fPIC"
+    override-build: |
+      cmake -DPHASH_DYNAMIC=ON -DPHASH_STATIC=OFF .
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cp -a third-party/CImg $SNAPCRAFT_PART_INSTALL/usr/include/
+    organize:
+      usr/lib: lib
+      usr/include: include
+      usr/local/lib: lib
+      usr/local/include: include
+    stage:
+      [include/*, lib/*, -usr]
+
   pixel:
-    after: [tcl]
+    after: [tcl, phash]
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/pixel
-    source-tag: imlib2_1.2.4
+    source-tag: v3.5.3
     build-packages:
       - libjpeg-turbo8-dev
       - libexif-dev
@@ -538,7 +562,7 @@ parts:
       - libwebp6
       - libimlib2
     build-environment:
-      - CFLAGS: "$CFLAGS -flto -O3 -I$SNAPCRAFT_PART_INSTALL/include"
+      - CFLAGS: "$CFLAGS -flto -O3 -I$SNAPCRAFT_PART_INSTALL/include -I$SNAPCRAFT_STAGE/include -L$SNAPCRAFT_STAGE/lib"
     override-build: |
       cd pixel_core
         echo "Building pixel_core"
@@ -574,6 +598,12 @@ parts:
         make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       cd ../pixel_imlib2
         echo "Building pixel_imlib2"
+        autoconf
+        ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/root/stage/lib
+        make -j 8 all
+        make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+      cd ../pixel_phash
+        echo "Building pixel_phash"
         autoconf
         ./configure --prefix= --enable-symbols --with-tcl=$SNAPCRAFT_STAGE/lib --with-pixel=$SNAPCRAFT_PART_INSTALL/root/stage/lib
         make -j 8 all
