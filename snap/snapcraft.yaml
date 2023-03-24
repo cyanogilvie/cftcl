@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+61'
+version: '8.7+63'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -158,7 +158,11 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.11.5.1
+    source-tag: 0.12.2
+    source-depth: 1
+    source-submodules:
+      - tclconfig
+      - teabase
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
@@ -817,21 +821,19 @@ parts:
     prime: [-repos/packcc.git]
 
   reuri:
-    after: [dedup, re2c, packcc]
+    after: [dedup, re2c]
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.4
+    source-tag: v0.6
     source-depth: 1
     source-submodules:
-      - tools/re2c
-      - tools/packcc
+      #- tools/re2c
       - tclconfig
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
       git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
-      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/packcc.git tools/packcc
       autoconf
       ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --with-dedup=$SNAPCRAFT_STAGE/lib/dedup0.9.4 --enable-symbols
       #make pgo install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
