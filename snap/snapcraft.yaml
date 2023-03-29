@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+64'
+version: '8.7+65'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -245,7 +245,7 @@ parts:
   sqlite:
     after: [tcl]
     source-type: tar
-    source: https://sqlite.org/2021/sqlite-autoconf-3350400.tar.gz
+    source: https://sqlite.org/2023/sqlite-autoconf-3410200.tar.gz
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     plugin: nil
@@ -787,7 +787,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/dedup
-    source-tag: v0.9.4.2
+    source-tag: v0.9.5
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
@@ -795,7 +795,7 @@ parts:
       ./configure --prefix= --exec-prefix=/BOGUS --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       #sed -inline -e "s/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/$(echo "$SNAPCRAFT_PART_INSTALL/" | sed -e 's/\//\\\//g')/" dedupConfig.sh
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
-      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.4/dedupConfig.sh"
+      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.5/dedupConfig.sh"
     organize:
       BOGUS/lib: lib
       BOGUS/include: include
@@ -804,7 +804,7 @@ parts:
   re2c:
     plugin: dump
     source-type: git
-    source: https://github.com/skvadrik/re2c
+    source: https://github.com/skvadrik/re2c/
     organize:
       .git: repos/re2c.git/
     stage: [repos/re2c.git]
@@ -814,11 +814,19 @@ parts:
     plugin: dump
     source-type: git
     source: https://github.com/arithy/packcc
-    source-tag: v1.7.2
     organize:
       .git: repos/packcc.git/
     stage: [repos/packcc.git]
     prime: [-repos/packcc.git]
+
+  sqliterepo:
+    plugin: dump
+    source-type: git
+    source: https://github.com/sqlite/sqlite
+    organize:
+      .git: repos/sqlite.git/
+    stage: [repos/sqlite.git]
+    prime: [-repos/sqlite.git]
 
   reuri:
     after: [dedup, re2c]
@@ -835,7 +843,7 @@ parts:
     override-build: |
       git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
       autoconf
-      ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --with-dedup=$SNAPCRAFT_STAGE/lib/dedup0.9.4 --enable-symbols
+      ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --with-dedup=$SNAPCRAFT_STAGE/lib/dedup0.9.5 --enable-symbols
       #make pgo install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
     organize:
@@ -913,20 +921,26 @@ parts:
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
 
   jitc:
-    after: [tclconfig, re2c, packcc]
+    after: [tclconfig, re2c, packcc, sqliterepo]
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/jitc
-    source-tag: v0.2.1
+    source-tag: v0.4
     source-depth: 1
+    source-submodules:
+      - tclconfig
+      - teabase
+      - tinycc
+      - dedup
     build-environment:
       - CFLAGS: "$CFLAGS -O3 -flto -std=gnu11"
     build-packages:
       - python3
     override-build: |
-      #git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
-      #git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/packcc.git tools/packcc
-      sed --in-place -e 's/ --single-branch//g' Makefile.in
+      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
+      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/packcc.git tools/packcc
+      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/sqlite.git tools/sqlite
+      #sed --in-place -e 's/ --single-branch//g' Makefile.in
       autoconf
       ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       make tcc
