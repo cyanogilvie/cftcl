@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+65'
+version: '8.7+66'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -141,7 +141,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/parse_args
-    source-tag: v0.3.4.2
+    source-tag: v0.5.1
     source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
@@ -196,8 +196,13 @@ parts:
   unixsockets:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/unix_sockets/archive/761daa5.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/unix_sockets
+    source-depth: 1
+    source-tag: v0.2.1
+    source-submodules:
+      - tclconfig
+      - teabase
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
@@ -236,10 +241,10 @@ parts:
   rlhttp:
     source-type: git
     source: https://github.com/RubyLane/rl_http
-    source-tag: "1.14.4"
+    source-tag: "1.14.9"
     plugin: nil
     override-build: |
-      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+      make install PREFIX=$SNAPCRAFT_PART_INSTALL
     stage: [lib/*]
 
   sqlite:
@@ -533,6 +538,12 @@ parts:
       - libpng-dev
       - libtiff-dev
       - cmake
+    stage-packages:
+      - libjbig0
+      - libjpeg-turbo8
+      - libpng16-16
+      - libtiff5
+      - libwebp6
     build-environment:
       - CFLAGS: "$CFLAGS -fPIC"
     override-build: |
@@ -636,7 +647,7 @@ parts:
     after: [tcl]
     plugin: nil
     source-type: tar
-    source: https://github.com/cyanogilvie/tcl-openapi/archive/v0.4.11.tar.gz
+    source: https://github.com/cyanogilvie/tcl-openapi/archive/v0.4.12.tar.gz
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
@@ -648,7 +659,7 @@ parts:
     after: [openapi, rljson, parseargs, chantricks, tcllib]
     plugin: nil
     source-type: tar
-    source: https://github.com/cyanogilvie/tcl-docker-client/archive/v0.9.0.tar.gz
+    source: https://github.com/cyanogilvie/tcl-docker-client/archive/v0.9.2.tar.gz
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
@@ -712,15 +723,15 @@ parts:
   aws:
     after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread, tcllib, tdom]
     plugin: nil
-    source-type: local
-    source: api
+    source-type: git
+    source: https://github.com/cyanogilvie/aws-tcl
+    source-tag: v2.0a5.2
+    source-depth: 1
     build-environment:
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
-      mkdir -p "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl"
-      cp -r *.tm aws1 "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
-      "$SNAPCRAFT_STAGE/bin/tclsh8.7" build.tcl -definitions "$SNAPCRAFT_STAGE/botocore/data" -prefix "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl"
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
 
   trofs:
     after: [tcl]
@@ -796,6 +807,7 @@ parts:
       #sed -inline -e "s/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/$(echo "$SNAPCRAFT_PART_INSTALL/" | sed -e 's/\//\\\//g')/" dedupConfig.sh
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.5/dedupConfig.sh"
+      cp $SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.5/dedupConfig.sh $SNAPCRAFT_PART_INSTALL/BOGUS/lib/
     organize:
       BOGUS/lib: lib
       BOGUS/include: include
@@ -833,22 +845,27 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.7
+    source-tag: v0.10
     source-depth: 1
     source-submodules:
       #- tools/re2c
       - tclconfig
+      - teabase
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
       git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
       autoconf
-      ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --with-dedup=$SNAPCRAFT_STAGE/lib/dedup0.9.5 --enable-symbols
+      ./configure --prefix= --exec-prefix=/BOGUS --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols --with-dedup=$SNAPCRAFT_STAGE/lib
+      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" reuriConfig.sh
       #make pgo install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+      cp $SNAPCRAFT_PART_INSTALL/BOGUS/lib/reuri*/reuriConfig.sh $SNAPCRAFT_PART_INSTALL/BOGUS/lib/
     organize:
-      root/stage/lib: lib
-    stage: [-root]
+      BOGUS/lib: lib
+      BOGUS/include: include
+    stage: [-BOGUS]
 
   brotli:
     after: [tcl, tclconfig]
@@ -877,12 +894,12 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/aio
-    source-tag: v1.7
+    source-tag: v1.7.1
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
     override-build: |
-      make test && make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+      make test && make install-tm PREFIX=$SNAPCRAFT_PART_INSTALL
 
   prng:
     after: [tcl]
