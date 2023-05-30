@@ -731,7 +731,7 @@ parts:
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
     override-build: |
-      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+      make install DESTDIR=$SNAPCRAFT_PART_INSTALL PREFIX=
 
   trofs:
     after: [tcl]
