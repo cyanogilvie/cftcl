@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+66'
+version: '8.7+68'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -20,7 +20,7 @@ parts:
   tcl:
     plugin: autotools
     source-type: tar
-    source: https://core.tcl-lang.org/tcl/tarball/99b8ad35a258cade/tcl.tar.gz # tip of core-8-branch
+    source: https://core.tcl-lang.org/tcl/tarball/f7629abff2/tcl.tar.gz # tip of core-8-branch
     source-subdir: unix
     build-packages:
       - build-essential
@@ -115,17 +115,22 @@ parts:
       mkdir -p "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
       cp -r src/tm/* "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
 
+  openssl1:
+    plugin: nil
+    source-type: tar
+    source: https://www.openssl.org/source/openssl-1.1.1t.tar.gz
+    override-build: |
+      ./config
+      make all install
+
   tcltls:
-    after: [tclconfig]
+    after: [tclconfig, openssl1]
     source-type: tar
     source: https://core.tcl-lang.org/tcltls/tarball/tls-1-7-22/tcltls.tar.gz
     plugin: autotools
     build-packages:
       - curl
-      - libssl-dev
       - pkg-config
-    stage-packages:
-      - libssl1.1
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
@@ -262,34 +267,6 @@ parts:
     organize:
       root/stage/lib/*: lib/
     stage: [lib/*]
-
-  tcc4tcl:
-    after: [tcl]
-    source-type: tar
-    source: https://github.com/cyanogilvie/tcc4tcl/archive/b8171e0.tar.gz
-    plugin: nil
-    build-packages:
-      - openssl
-      - wget
-    stage-packages:
-      - libc6-dev
-    override-build: |
-      if [ "$SNAPCRAFT_TARGET_ARCH" = "amd64" -o "$SNAPCRAFT_TARGET_ARCH" = "armhf" ]
-      then
-        build/pre.sh
-        sed --in-place -e 's/@@VERS@@/0.30.1/g' configure.ac Makefile.in tcc4tcl.tcl
-        autoconf
-        ./configure --prefix=$SNAPCRAFT_PART_INSTALL --with-tcl=$SNAPCRAFT_STAGE/lib
-        make -j 8 all
-        make install
-      fi
-    stage: 
-      - -usr/share/man
-      - -usr/share/doc
-      - -usr/share/lintian
-      - -usr/bin
-      - -include/expat*
-      - -usr/lib/**/*.a
 
   tbuild:
     after: [tcl]
@@ -700,12 +677,13 @@ parts:
   parsetcl:
     after: [tcl, tdom]
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/parsetcl/archive/030a1439b76747ec7a016c5bd0ae78c93fc9bb7b.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/parsetcl
+    source-tag: v0.1.2
+    source-depth: 1
     build-environment:
       - CFLAGS: "$CFLAGS -flto -O3"
     override-build: |
-      ln -s "$SNAPCRAFT_STAGE/tclconfig"
       autoconf
       ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --with-tdom=$SNAPCRAFT_STAGE/lib --enable-symbols
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
@@ -721,11 +699,11 @@ parts:
     prime: [-botocore]
 
   aws:
-    after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread, tcllib, tdom]
+    after: [botocore, tcl, rljson, parseargs, chantricks, cflib, rlhttp, gcclass, thread, tcllib, tdom, reuri]
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/aws-tcl
-    source-tag: v2.0a5.2
+    source-tag: v2.0a6
     source-depth: 1
     build-environment:
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
@@ -942,7 +920,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/jitc
-    source-tag: v0.4
+    source-tag: v0.4.1
     source-depth: 1
     source-submodules:
       - tclconfig
