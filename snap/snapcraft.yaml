@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+68'
+version: '8.7+69'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -246,7 +246,7 @@ parts:
   rlhttp:
     source-type: git
     source: https://github.com/RubyLane/rl_http
-    source-tag: "1.14.9"
+    source-tag: "1.14.10"
     plugin: nil
     override-build: |
       make install PREFIX=$SNAPCRAFT_PART_INSTALL
