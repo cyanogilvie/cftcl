@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+73'
+version: '8.7+75'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -163,7 +163,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.12.2
+    source-tag: 0.14
     source-depth: 1
     source-submodules:
       - tclconfig
@@ -611,14 +611,15 @@ parts:
 
   chantricks:
     after: [tcl]
+    source-type: git
+    source: https://github.com/cyanogilvie/chantricks
+    source-tag: v1.0.5
     plugin: nil
-    source-type: tar
-    source: https://github.com/cyanogilvie/chantricks/archive/v1.0.3.tar.gz
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
     override-build: |
-      make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL
+      make install-tm PREFIX=$SNAPCRAFT_PART_INSTALL
 
   openapi:
     after: [tcl]
@@ -823,7 +824,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.13
+    source-tag: v0.13.2
     source-depth: 1
     source-submodules:
       #- tools/re2c
@@ -920,7 +921,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/jitc
-    source-tag: v0.5
+    source-tag: v0.5.3
     source-depth: 1
     source-submodules:
       - tclconfig
