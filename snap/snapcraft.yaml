@@ -163,7 +163,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/RubyLane/rl_json
-    source-tag: 0.14
+    source-tag: "0.14"
     source-depth: 1
     source-submodules:
       - tclconfig
