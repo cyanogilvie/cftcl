@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+78'
+version: '8.7+80'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -223,8 +223,10 @@ parts:
   tcllib:
     after: [tcl]
     plugin: nil
-    source-type: tar
-    source: https://core.tcl-lang.org/tcllib/uv/tcllib-1.20.tar.gz
+    source-type: git
+    source: https://github.com/cyanogilvie/tcllib
+    source-tag: cyan-1-21-2
+    source-depth: 1
     build-environment:
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
     override-build: |
@@ -940,6 +942,29 @@ parts:
       autoconf
       ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       make tcc
+      make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
+
+  tomcrypt:
+    after: [tcl]
+    plugin: nil
+    source-type: git
+    source: https://github.com/cyanogilvie/tcl-tomcrypt
+    source-tag: v0.1
+    source-depth: 1
+    source-submodules:
+      - tclconfig
+      - teabase
+      - deps/libtommath
+      - deps/tomsfastmath
+      - deps/libtomcrypt
+    build-environment:
+      - CFLAGS: "$CFLAGS -O3 -flto -std=gnu11"
+    override-build: |
+      autoconf
+      ./configure --prefix= --exec-prefix=$SNAPCRAFT_STAGE --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
     organize:
       root/stage/lib: lib
