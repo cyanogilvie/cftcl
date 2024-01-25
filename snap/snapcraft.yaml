@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+83'
+version: '8.7+84'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -115,16 +115,17 @@ parts:
       mkdir -p "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
       cp -r src/tm/* "$SNAPCRAFT_PART_INSTALL/lib/tcl8/site-tcl/"
 
-  openssl1:
-    plugin: nil
-    source-type: tar
-    source: https://www.openssl.org/source/openssl-1.1.1w.tar.gz
-    override-build: |
-      ./config
-      make all install
+# openssl1:
+#   plugin: nil
+#   source-type: tar
+#   source: https://www.openssl.org/source/openssl-1.1.1w.tar.gz
+#   override-build: |
+#     ./config
+#     make all install
 
   tcltls:
-    after: [tclconfig, openssl1]
+    #after: [tclconfig, openssl1]
+    after: [tclconfig]
     source-type: tar
     source: https://core.tcl-lang.org/tcltls/tarball/tls-1-7-22/tcltls.tar.gz
     plugin: autotools
@@ -140,6 +141,23 @@ parts:
       make -j 8 all
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
     stage: [-usr/share]
+
+  s2n:
+    after: [tcl]
+    source-type: tar
+    source: https://github.com/cyanogilvie/tcl-s2n/releases/download/v0.3.5/tcl-s2n-0.3.5.tar.gz
+    plugin: autotools
+    build-packages:
+      - cmake
+    build-environment:
+      - CFLAGS: "$CFLAGS -fno-lto -O3"
+    override-build: |
+      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
+      make deps
+      make test install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
 
   parseargs:
     after: [tcl]
