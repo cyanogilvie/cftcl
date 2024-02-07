@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+89'
+version: '8.7+90'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -89,7 +89,7 @@ parts:
 # tdbcpostgres:
 #   after: [tclconfig, tdbc]
 #   source-type: tar
-#   source: https://github.com/cyanogilvie/tdbcpostgres/archive/488ca29f7b52730f11bdbaa67319ab1de211a27d.tar.gz
+#   source: https://github.com/cyanogilvie/tdbcpostgres/archive/9a22bc4a35c9b04e49118d7cc00ae11637613190.tar.gz
 #   plugin: autotools
 #   build-environment:
 #     - CFLAGS: "$CFLAGS -flto -O3"
@@ -108,7 +108,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/pgwire
-    source-tag: v3.0.0b21
+    source-tag: v3.0.0b23
     source-depth: 1
     override-build: |
       make
