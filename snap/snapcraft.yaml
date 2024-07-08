@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+96'
+version: '8.7+97'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -633,7 +633,7 @@ parts:
     after: [tcl]
     source-type: git
     source: https://github.com/cyanogilvie/chantricks
-    source-tag: v1.0.5
+    source-tag: v1.0.6
     plugin: nil
     build-environment:
       - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
@@ -724,7 +724,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/aws-tcl
-    source-tag: v2.0a15
+    source-tag: v2.0a16
     source-depth: 1
     build-environment:
       - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
