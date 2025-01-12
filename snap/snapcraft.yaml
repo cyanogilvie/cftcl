@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+108'
+version: '8.7+109'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -973,7 +973,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/tcl-tomcrypt
-    source-tag: v0.5.5
+    source-tag: v0.5.6
     source-depth: 1
     source-submodules:
       - tclconfig
