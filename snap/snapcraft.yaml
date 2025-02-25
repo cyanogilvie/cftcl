@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+111'
+version: '8.7+112'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -267,7 +267,7 @@ parts:
   rlhttp:
     source-type: git
     source: https://github.com/RubyLane/rl_http
-    source-tag: "1.18"
+    source-tag: "1.19"
     plugin: nil
     override-build: |
       make install PREFIX=$SNAPCRAFT_PART_INSTALL
@@ -972,7 +972,7 @@ parts:
     after: [tcl]
     plugin: nil
     source-type: tar
-    source: https://github.com/cyanogilvie/tcl-tomcrypt/releases/download/v0.6.0/tomcrypt0.6.0.tar.gz
+    source: https://github.com/cyanogilvie/tcl-tomcrypt/releases/download/v0.6.1/tomcrypt0.6.1.tar.gz
     build-environment:
       - CFLAGS: "$CFLAGS -O3 -flto -std=gnu11"
     override-build: |
