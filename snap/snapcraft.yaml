@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+113'
+version: '8.7+114'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -942,7 +942,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/jitc
-    source-tag: v0.5.5
+    source-tag: v0.5.6
     source-depth: 1
     source-submodules:
       - tclconfig
@@ -989,6 +989,22 @@ parts:
     source: https://github.com/cyanogilvie/mtag_stack/releases/download/v2.0.1/mtag_stack2.0.1.tar.gz
     override-build:
       make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+
+  ip:
+    after: [tcl]
+    plugin: nil
+    source-type: git
+    source: https://github.com/cyanogilvie/tcl-ip
+    source-tag: v1.2
+    source-depth: 1
+    build-environment:
+      - LD_LIBRARY_PATH: "$SNAPCRAFT_STAGE/lib"
+      - TCL_LIBRARY: "$SNAPCRAFT_STAGE/lib/tcl8.7"
+    override-build: |
+      make install-tm DESTDIR=$SNAPCRAFT_PART_INSTALL PREFIX=/
+    organize:
+      root/stage/lib: lib
+    stage: [-root]
 
 apps:
   cftcl:
