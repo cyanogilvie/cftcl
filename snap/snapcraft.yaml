@@ -1,6 +1,6 @@
 name: cftcl
 base: core20
-version: '8.7+116'
+version: '8.7+117'
 summary: Tcl with Batteries Included from Codeforge, Ruby Lane and many other packages # 79 char long summary
 description: |
   Tcl interpreter with a large selection of generally useful packages
@@ -124,24 +124,24 @@ parts:
 #     ./config
 #     make all install
 
-  tcltls:
-    #after: [tclconfig, openssl1]
-    after: [tclconfig]
-    source-type: tar
-    source: https://core.tcl-lang.org/tcltls/tarball/tls-1-7-22/tcltls.tar.gz
-    plugin: autotools
-    build-packages:
-      - curl
-      - pkg-config
-    build-environment:
-      - CFLAGS: "$CFLAGS -flto -O3"
-    override-build: |
-      ln -s "$SNAPCRAFT_STAGE/tclconfig"
-      ./autogen.sh
-      ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --libdir=/lib --disable-sslv2 --disable-sslv3 --disable-tlsv1.0 --disable-tlsv1.1 --enable-ssl-fastpath
-      make -j 8 all
-      make install DESTDIR=$SNAPCRAFT_PART_INSTALL
-    stage: [-usr/share]
+# tcltls:
+#   #after: [tclconfig, openssl1]
+#   after: [tclconfig]
+#   source-type: tar
+#   source: https://core.tcl-lang.org/tcltls/tarball/tls-1-7-22/tcltls.tar.gz
+#   plugin: autotools
+#   build-packages:
+#     - curl
+#     - pkg-config
+#   build-environment:
+#     - CFLAGS: "$CFLAGS -flto -O3"
+#   override-build: |
+#     ln -s "$SNAPCRAFT_STAGE/tclconfig"
+#     ./autogen.sh
+#     ./configure --prefix= --with-tcl=$SNAPCRAFT_STAGE/lib --libdir=/lib --disable-sslv2 --disable-sslv3 --disable-tlsv1.0 --disable-tlsv1.1 --enable-ssl-fastpath
+#     make -j 8 all
+#     make install DESTDIR=$SNAPCRAFT_PART_INSTALL
+#   stage: [-usr/share]
 
   s2n:
     after: [tcl]
@@ -798,7 +798,7 @@ parts:
     plugin: nil
     source-type: git
     source: https://github.com/cyanogilvie/dedup
-    source-tag: v0.9.5
+    source-tag: v0.9.7
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
@@ -806,8 +806,8 @@ parts:
       ./configure --prefix= --exec-prefix=/BOGUS --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols
       #sed -inline -e "s/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/$(echo "$SNAPCRAFT_PART_INSTALL/" | sed -e 's/\//\\\//g')/" dedupConfig.sh
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
-      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.5/dedupConfig.sh"
-      cp $SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.5/dedupConfig.sh $SNAPCRAFT_PART_INSTALL/BOGUS/lib/
+      sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" "$SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.7/dedupConfig.sh"
+      cp $SNAPCRAFT_PART_INSTALL/BOGUS/lib/dedup0.9.7/dedupConfig.sh $SNAPCRAFT_PART_INSTALL/BOGUS/lib/
     organize:
       BOGUS/lib: lib
       BOGUS/include: include
@@ -843,22 +843,13 @@ parts:
   reuri:
     after: [dedup, re2c]
     plugin: nil
-    source-type: git
-    source: https://github.com/cyanogilvie/reuri
-    source-tag: v0.14
-    source-depth: 1
-    source-submodules:
-      #- tools/re2c
-      - tclconfig
-      - teabase
+    source-type: tar
+    source: https://github.com/cyanogilvie/reuri/releases/download/v0.14.3/reuri0.14.3.tar.gz
     build-environment:
       - CFLAGS: "$CFLAGS -Ofast -flto -ffast-math -std=gnu11"
     override-build: |
-      git submodule update --init --recommend-shallow --depth=1 --reference $SNAPCRAFT_STAGE/repos/re2c.git tools/re2c
-      autoconf
       ./configure --prefix= --exec-prefix=/BOGUS --with-tcl=$SNAPCRAFT_STAGE/lib --enable-symbols --with-dedup=$SNAPCRAFT_STAGE/lib
       sed -i -e "s/\/BOGUS/$(echo "$SNAPCRAFT_STAGE" | sed -e 's/\//\\\//g')/" reuriConfig.sh
-      #make pgo install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
       make install-binaries install-libraries DESTDIR=$SNAPCRAFT_PART_INSTALL
 
       cp $SNAPCRAFT_PART_INSTALL/BOGUS/lib/reuri*/reuriConfig.sh $SNAPCRAFT_PART_INSTALL/BOGUS/lib/
